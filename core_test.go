@@ -2224,7 +2224,7 @@ func TestMatInvert(t *testing.T) {
 	dst := NewMat()
 	defer dst.Close()
 
-	Invert(src, &dst, 0)
+	Invert(src, &dst, SolveDecompositionLu)
 	if dst.Empty() {
 		t.Error("Invert dst should not be empty.")
 	}
@@ -2252,13 +2252,17 @@ func TestKMeansPoints(t *testing.T) {
 		image.Pt(0, 0),
 		image.Pt(1, 1),
 	}
+
+	pv := NewPointVectorFromPoints(points)
+	defer pv.Close()
+
 	bestLabels := NewMat()
 	defer bestLabels.Close()
 	centers := NewMat()
 	defer centers.Close()
 
 	criteria := NewTermCriteria(Count, 10, 1.0)
-	KMeansPoints(points, 2, &bestLabels, criteria, 2, KMeansRandomCenters, &centers)
+	KMeansPoints(pv, 2, &bestLabels, criteria, 2, KMeansRandomCenters, &centers)
 	if bestLabels.Empty() || bestLabels.Size()[0] != len(points) {
 		t.Error("Labels is not proper")
 	}
@@ -2589,5 +2593,209 @@ func Test_toGoStrings(t *testing.T) {
 		if s != result[i] {
 			t.Errorf("TesttoGoStrings failed: strings are not equal. expected=%s, actusal=%s", s, result[i])
 		}
+	}
+}
+
+func TestTheRNG(t *testing.T) {
+	rng := TheRNG()
+	if rng.p == nil {
+		t.Errorf("got no rng")
+	}
+}
+
+func TestSetRNGSeed(t *testing.T) {
+	SetRNGSeed(123)
+}
+
+func TestRNG_Fill(t *testing.T) {
+	rng := TheRNG()
+	mat := NewMatWithSize(20, 20, MatTypeCV8UC3)
+	defer mat.Close()
+	rng.Fill(&mat, RNGDistNormal, 10, 20, false)
+}
+
+func TestRNG_Gaussian(t *testing.T) {
+	rng := TheRNG()
+	_ = rng.Gaussian(0.5)
+}
+
+func TestRNG_Next(t *testing.T) {
+	rng := TheRNG()
+	_ = rng.Next()
+}
+
+func TestRandN(t *testing.T) {
+	mat := NewMatWithSize(5, 5, MatTypeCV8UC3)
+	defer mat.Close()
+	RandN(&mat, NewScalar(10, 10, 10, 10), NewScalar(20, 20, 20, 20))
+}
+
+func TestRandShuffle(t *testing.T) {
+	mat := NewMatWithSize(5, 5, MatTypeCV8UC3)
+	defer mat.Close()
+	RandShuffle(&mat)
+}
+
+func TestRandShuffleWithParams(t *testing.T) {
+	mat := NewMatWithSize(5, 5, MatTypeCV8UC3)
+	defer mat.Close()
+	RandShuffleWithParams(&mat, 1, TheRNG())
+}
+
+func TestRandU(t *testing.T) {
+	mat := NewMatWithSize(5, 5, MatTypeCV8UC3)
+	defer mat.Close()
+	RandU(&mat, NewScalar(10, 10, 10, 10), NewScalar(20, 20, 20, 20))
+}
+
+func TestNewPointsVector(t *testing.T) {
+	epv := NewPointsVector()
+	defer epv.Close()
+
+	if epv.Size() != 0 {
+		t.Fatal("expected empty pointsvector size not 0")
+	}
+
+	pts := [][]image.Point{
+		{
+			image.Pt(10, 10),
+			image.Pt(10, 20),
+			image.Pt(20, 20),
+			image.Pt(20, 10),
+		},
+	}
+
+	psv := NewPointsVectorFromPoints(pts)
+	defer psv.Close()
+
+	if psv.IsNil() {
+		t.Fatal("pointsvector pointer was nil")
+	}
+
+	if psv.Size() != 1 {
+		t.Fatal("expected pointsvector size 1")
+	}
+
+	ipv := psv.At(10)
+	if !ipv.IsNil() {
+		t.Fatal("expected pointvector nil")
+	}
+
+	pv := psv.At(0)
+	if pv.Size() != 4 {
+		t.Fatal("expected pointvector size 4")
+	}
+
+	p := pv.At(0)
+	if p != image.Pt(10, 10) {
+		t.Fatal("invalid At() point")
+	}
+
+	p = pv.At(10)
+	if p != image.Pt(0, 0) {
+		t.Fatal("invalid At() point beyond range")
+	}
+
+	out := psv.ToPoints()
+	if out[0][0] != image.Pt(10, 10) {
+		t.Fatal("invalid ToPoints() point")
+	}
+
+	ps := []image.Point{
+		image.Pt(10, 10),
+		image.Pt(10, 20),
+		image.Pt(20, 20),
+		image.Pt(20, 10),
+	}
+
+	apv := NewPointVectorFromPoints(ps)
+	defer apv.Close()
+
+	psv.Append(apv)
+	if psv.Size() != 2 {
+		t.Fatal("unable to append to PointsVector")
+	}
+}
+
+func TestNewPointVector(t *testing.T) {
+	epv := NewPointVector()
+	defer epv.Close()
+
+	if epv.Size() != 0 {
+		t.Fatal("expected empty pointvector size not 0")
+	}
+
+	pts := []image.Point{
+		image.Pt(10, 10),
+		image.Pt(10, 20),
+		image.Pt(20, 20),
+		image.Pt(20, 10),
+	}
+
+	pv := NewPointVectorFromPoints(pts)
+	defer pv.Close()
+
+	if pv.IsNil() {
+		t.Fatal("pointvector pointer was nil")
+	}
+
+	if pv.Size() != 4 {
+		t.Fatal("expected pointvector size 4")
+	}
+
+	p := pv.At(0)
+	if p != image.Pt(10, 10) {
+		t.Fatal("invalid point")
+	}
+
+	np := image.Pt(50, 50)
+
+	pv.Append(np)
+	if pv.Size() != 5 {
+		t.Fatal("unable to append to PointVector")
+	}
+}
+
+func TestNewPoint2fVector(t *testing.T) {
+	epv := NewPoint2fVector()
+	defer epv.Close()
+
+	if epv.Size() != 0 {
+		t.Fatal("expected empty pointvector size not 0")
+	}
+
+	pts := []Point2f{
+		{10.0, 10.0},
+		{10.0, 20.0},
+		{20.5, 21.5},
+		{25.5, 30.5},
+	}
+
+	pv := NewPoint2fVectorFromPoints(pts)
+	defer pv.Close()
+
+	if pv.IsNil() {
+		t.Fatal("point2fvector pointer was nil")
+	}
+
+	if pv.Size() != 4 {
+		t.Fatal("expected point2fvector size 4")
+	}
+
+	p := pv.At(0)
+	want := Point2f{10.0, 10.0}
+	if p != want {
+		t.Fatal("invalid point")
+	}
+
+	p = pv.At(10)
+	nopoint := Point2f{0, 0}
+	if p != nopoint {
+		t.Fatal("invalid At() point beyond range")
+	}
+
+	out := pv.ToPoints()
+	if len(out) != 4 && out[0] != want {
+		t.Fatal("invalid ToPoints()")
 	}
 }

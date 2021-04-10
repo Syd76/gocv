@@ -565,12 +565,9 @@ double KMeans(Mat data, int k, Mat bestLabels, TermCriteria criteria, int attemp
     return ret;
 }
 
-double KMeansPoints(Contour points, int k, Mat bestLabels, TermCriteria criteria, int attempts, int flags, Mat centers) {
+double KMeansPoints(PointVector points, int k, Mat bestLabels, TermCriteria criteria, int attempts, int flags, Mat centers) {
     std::vector<cv::Point2f> pts;
-
-    for (size_t i = 0; i < points.length; i++) {
-        pts.push_back(cv::Point2f(points.points[i].x, points.points[i].y));
-    }
+    copyPointVectorToPoint2fVector(points, &pts);
     double ret = cv::kmeans(pts, k, *bestLabels, *criteria, attempts, flags, *centers);
     return ret;
 }
@@ -852,6 +849,152 @@ Mat Mat_colRange(Mat m,int startrow,int endrow) {
     return new cv::Mat(m->colRange(startrow,endrow));
 }
 
+PointVector PointVector_New() {
+    return new std::vector< cv::Point >;
+}
+
+PointVector PointVector_NewFromPoints(Contour points) {
+    std::vector<cv::Point>* cntr = new std::vector<cv::Point>;
+
+    for (size_t i = 0; i < points.length; i++) {
+        cntr->push_back(cv::Point(points.points[i].x, points.points[i].y));
+    }
+
+    return cntr;
+}
+
+Point PointVector_At(PointVector pv, int idx) {
+    cv::Point p = pv->at(idx);
+    return Point{.x = p.x, .y = p.y};
+}
+
+void PointVector_Append(PointVector pv, Point p) {
+    pv->push_back(cv::Point(p.x, p.y));
+}
+
+int PointVector_Size(PointVector p) {
+    return p->size();
+}
+
+void PointVector_Close(PointVector p) {
+    p->clear();
+    delete p;
+}
+
+PointsVector PointsVector_New() {
+    return new std::vector< std::vector< cv::Point > >;
+}
+
+PointsVector PointsVector_NewFromPoints(Contours points) {
+    std::vector< std::vector< cv::Point > >* pv = new std::vector< std::vector< cv::Point > >;
+
+    for (size_t i = 0; i < points.length; i++) {
+        Contour contour = points.contours[i];
+
+        std::vector<cv::Point> cntr;
+
+        for (size_t i = 0; i < contour.length; i++) {
+            cntr.push_back(cv::Point(contour.points[i].x, contour.points[i].y));
+        }
+
+        pv->push_back(cntr);
+    }
+
+    return pv;
+}
+
+int PointsVector_Size(PointsVector ps) {
+    return ps->size();
+}
+
+PointVector PointsVector_At(PointsVector ps, int idx) {
+    std::vector< cv::Point >* p = &(ps->at(idx));
+    return p;
+}
+
+void PointsVector_Append(PointsVector psv, PointVector pv) {
+    psv->push_back(*pv);
+}
+
+void PointsVector_Close(PointsVector ps) {
+    ps->clear();
+    delete ps;
+}
+
+Point2fVector Point2fVector_New() {
+    return new std::vector< cv::Point2f >;
+}
+
+Point2fVector Point2fVector_NewFromPoints(Contour2f points) {
+    std::vector<cv::Point2f>* cntr = new std::vector<cv::Point2f>;
+
+    for (size_t i = 0; i < points.length; i++) {
+        cntr->push_back(cv::Point2f(points.points[i].x, points.points[i].y));
+    }
+
+    return cntr;
+}
+
+Point2f Point2fVector_At(Point2fVector pfv, int idx) {
+    cv::Point2f p = pfv->at(idx);
+    return Point2f{.x = p.x, .y = p.y};
+}
+
+int Point2fVector_Size(Point2fVector pfv) {
+    return pfv->size();
+}
+
+void Point2fVector_Close(Point2fVector pv) {
+    pv->clear();
+    delete pv;
+}
+
 void IntVector_Close(struct IntVector ivec) {
     delete[] ivec.val;
+}
+
+RNG TheRNG() {
+    return &cv::theRNG();
+}
+
+void SetRNGSeed(int seed) {
+    cv::setRNGSeed(seed);
+}
+
+void RNG_Fill(RNG rng, Mat mat, int distType, double a, double b, bool saturateRange) {
+    rng->fill(*mat, distType, a, b, saturateRange);
+}
+
+double RNG_Gaussian(RNG rng, double sigma) {
+    return rng->gaussian(sigma);
+}
+
+unsigned int RNG_Next(RNG rng) {
+    return rng->next();
+}
+
+void RandN(Mat mat, Scalar mean, Scalar stddev) {
+    cv::Scalar m = cv::Scalar(mean.val1, mean.val2, mean.val3, mean.val4);
+    cv::Scalar s = cv::Scalar(stddev.val1, stddev.val2, stddev.val3, stddev.val4);
+    cv::randn(*mat, m, s);
+}
+
+void RandShuffle(Mat mat) {
+    cv::randShuffle(*mat);
+}
+
+void RandShuffleWithParams(Mat mat, double iterFactor, RNG rng) {
+    cv::randShuffle(*mat, iterFactor, rng);
+}
+
+void RandU(Mat mat, Scalar low, Scalar high) {
+    cv::Scalar l = cv::Scalar(low.val1, low.val2, low.val3, low.val4);
+    cv::Scalar h = cv::Scalar(high.val1, high.val2, high.val3, high.val4);
+    cv::randn(*mat, l, h);
+}
+
+void copyPointVectorToPoint2fVector(PointVector src, Point2fVector dest) {
+    for (size_t i = 0; i < src->size(); i++) {
+        dest->push_back(cv::Point2f(src->at(i).x, src->at(i).y));
+    }
 }

@@ -24,19 +24,26 @@ func TestApproxPolyDP(t *testing.T) {
 	Rectangle(&img, image.Rect(125, 25, 175, 75), white, 1)
 
 	contours := FindContours(img, RetrievalExternal, ChainApproxSimple)
+	defer contours.Close()
 
-	trianglePerimeter := ArcLength(contours[0], true)
-	triangleContour := ApproxPolyDP(contours[0], 0.04*trianglePerimeter, true)
+	trianglePerimeter := ArcLength(contours.At(0), true)
+	triangleContour := ApproxPolyDP(contours.At(0), 0.04*trianglePerimeter, true)
+	defer triangleContour.Close()
+
 	expectedTriangleContour := []image.Point{image.Pt(25, 25), image.Pt(25, 75), image.Pt(75, 50)}
-	if !reflect.DeepEqual(triangleContour, expectedTriangleContour) {
-		t.Errorf("Failed to approximate triangle.\nActual:%v\nExpect:%v", triangleContour, expectedTriangleContour)
+	actualTriangleContour := triangleContour.ToPoints()
+	if !reflect.DeepEqual(actualTriangleContour, expectedTriangleContour) {
+		t.Errorf("Failed to approximate triangle.\nActual:%v\nExpect:%v", actualTriangleContour, expectedTriangleContour)
 	}
 
-	rectPerimeter := ArcLength(contours[1], true)
-	rectContour := ApproxPolyDP(contours[1], 0.04*rectPerimeter, true)
+	rectPerimeter := ArcLength(contours.At(1), true)
+	rectContour := ApproxPolyDP(contours.At(1), 0.04*rectPerimeter, true)
+	defer rectContour.Close()
+
+	actualRectContour := rectContour.ToPoints()
 	expectedRectContour := []image.Point{image.Pt(125, 24), image.Pt(124, 75), image.Pt(175, 76), image.Pt(176, 25)}
-	if !reflect.DeepEqual(rectContour, expectedRectContour) {
-		t.Errorf("Failed to approximate rectangle.\nActual:%v\nExpect:%v", rectContour, expectedRectContour)
+	if !reflect.DeepEqual(actualRectContour, expectedRectContour) {
+		t.Errorf("Failed to approximate rectangle.\nActual:%v\nExpect:%v", actualRectContour, expectedRectContour)
 	}
 }
 
@@ -48,11 +55,13 @@ func TestConvexity(t *testing.T) {
 	defer img.Close()
 
 	res := FindContours(img, RetrievalExternal, ChainApproxSimple)
-	if len(res) < 1 {
+	defer res.Close()
+
+	if res.Size() < 1 {
 		t.Error("Invalid FindContours test")
 	}
 
-	area := ContourArea(res[0])
+	area := ContourArea(res.At(0))
 	if area != 127280.0 {
 		t.Errorf("Invalid ContourArea test: %f", area)
 	}
@@ -60,7 +69,7 @@ func TestConvexity(t *testing.T) {
 	hull := NewMat()
 	defer hull.Close()
 
-	ConvexHull(res[0], &hull, true, false)
+	ConvexHull(res.At(0), &hull, true, false)
 	if hull.Empty() {
 		t.Error("Invalid ConvexHull test")
 	}
@@ -68,7 +77,7 @@ func TestConvexity(t *testing.T) {
 	defects := NewMat()
 	defer defects.Close()
 
-	ConvexityDefects(res[0], hull, &defects)
+	ConvexityDefects(res.At(0), hull, &defects)
 	if defects.Empty() {
 		t.Error("Invalid ConvexityDefects test")
 	}
@@ -82,7 +91,10 @@ func TestMinEnclosingCircle(t *testing.T) {
 		image.Pt(-2, 0),
 		image.Pt(1, -1),
 	}
-	x, y, radius := MinEnclosingCircle(pts)
+	pv := NewPointVectorFromPoints(pts)
+	defer pv.Close()
+
+	x, y, radius := MinEnclosingCircle(pv)
 	const epsilon = 0.001
 	if math.Abs(float64(radius-2.0)) > epsilon ||
 		math.Abs(float64(x-0.0)) > epsilon ||
@@ -334,7 +346,9 @@ func TestBoxPoints(t *testing.T) {
 	Threshold(img, &threshImg, 25, 255, ThresholdBinary)
 
 	contours := FindContours(threshImg, RetrievalExternal, ChainApproxSimple)
-	contour := contours[0]
+	defer contours.Close()
+
+	contour := contours.At(0)
 
 	hull := NewMat()
 	defer hull.Close()
@@ -343,10 +357,14 @@ func TestBoxPoints(t *testing.T) {
 	for i := 0; i < hull.Cols(); i++ {
 		for j := 0; j < hull.Rows(); j++ {
 			p := hull.GetIntAt(j, i)
-			hullPoints = append(hullPoints, contour[p])
+			hullPoints = append(hullPoints, contour.At(int(p)))
 		}
 	}
-	rect := MinAreaRect(hullPoints)
+
+	pvhp := NewPointVectorFromPoints(hullPoints)
+	defer pvhp.Close()
+
+	rect := MinAreaRect(pvhp)
 	pts := NewMat()
 	defer pts.Close()
 	BoxPoints(rect, &pts)
@@ -363,7 +381,11 @@ func TestMinAreaRect(t *testing.T) {
 		image.Pt(4, 2),
 		image.Pt(2, 4),
 	}
-	m := MinAreaRect(src)
+
+	pv := NewPointVectorFromPoints(src)
+	defer pv.Close()
+
+	m := MinAreaRect(pv)
 
 	if m.Center.X != 2 {
 		t.Errorf("TestMinAreaRect(): unexpected center.X = %v, want = %v", m.Center.X, 2)
@@ -388,7 +410,11 @@ func TestFitEllipse(t *testing.T) {
 		image.Pt(0, 3),
 		image.Pt(0, 2),
 	}
-	rect := FitEllipse(src)
+
+	pv := NewPointVectorFromPoints(src)
+	defer pv.Close()
+
+	rect := FitEllipse(pv)
 	if rect.Center.X != 2 {
 		t.Errorf("TestFitEllipse(): unexpected center.X = %v, want = %v", rect.Center.X, 2)
 	}
@@ -408,28 +434,63 @@ func TestFindContours(t *testing.T) {
 	defer img.Close()
 
 	res := FindContours(img, RetrievalExternal, ChainApproxSimple)
-	if len(res) < 1 {
+	defer res.Close()
+
+	if res.Size() < 1 {
 		t.Error("Invalid FindContours test")
 	}
 
-	area := ContourArea(res[0])
+	area := ContourArea(res.At(0))
 	if area != 127280.0 {
 		t.Errorf("Invalid ContourArea test: %f", area)
 	}
 
-	r := BoundingRect(res[0])
+	r := BoundingRect(res.At(0))
 	if !r.Eq(image.Rect(0, 0, 400, 320)) {
 		t.Errorf("Invalid BoundingRect test: %v", r)
 	}
 
-	length := ArcLength(res[0], true)
+	length := ArcLength(res.At(0), true)
 	if int(length) != 1436 {
 		t.Errorf("Invalid ArcLength test: %f", length)
 	}
 
-	length = ArcLength(res[0], false)
+	length = ArcLength(res.At(0), false)
 	if int(length) != 1037 {
 		t.Errorf("Invalid ArcLength test: %f", length)
+	}
+}
+
+func TestFindContoursWithParams(t *testing.T) {
+	img := IMRead("images/contours.png", IMReadGrayScale)
+	if img.Empty() {
+		t.Fatal("Invalid read of Mat in FindContours test")
+	}
+	defer img.Close()
+	hierarchy := NewMat()
+	defer hierarchy.Close()
+
+	res := FindContoursWithParams(img, &hierarchy, RetrievalTree, ChainApproxNone)
+	defer res.Close()
+
+	if want := 4; want != res.Size() {
+		t.Fatalf("Expected %d contours but got %d", want, res.Size())
+	}
+	if res.Size() != hierarchy.Cols() {
+		t.Fatalf("Expected %d hierarchy of contours, got %d", res.Size(), hierarchy.Cols())
+	}
+	// Assert hierarchy values, the pattern is [Next, Previous, First_Child, Parent]
+	// More info at https://docs.opencv.org/master/d9/d8b/tutorial_py_contours_hierarchy.html
+	for i, want := range []Veci{
+		{1, -1, -1, -1},
+		{-1, 0, 2, -1},
+		{-1, -1, 3, 1},
+		{-1, -1, -1, 2},
+	} {
+		got := hierarchy.GetVeciAt(0, i)
+		if !reflect.DeepEqual(want, got) {
+			t.Errorf("wrong hierarchy at position %d, want %v got %v", i, want, got)
+		}
 	}
 }
 
@@ -817,32 +878,32 @@ func TestHoughLines(t *testing.T) {
 	dest := NewMat()
 	defer dest.Close()
 
-	HoughLines(img, &dest, math.Pi/180, 1, 1)
+	HoughLines(img, &dest, 1, math.Pi/180, 50)
 	if dest.Empty() {
 		t.Error("Empty HoughLines test")
 	}
-	rowsDiff := dest.Rows() - 10411
-	if rowsDiff > 2 || rowsDiff < 0 {
+
+	if dest.Rows() != 6465 {
 		t.Errorf("Invalid HoughLines test rows: %v", dest.Rows())
 	}
 	if dest.Cols() != 1 {
 		t.Errorf("Invalid HoughLines test cols: %v", dest.Cols())
 	}
 
-	if dest.GetFloatAt(0, 0) != 0 && dest.GetFloatAt(0, 1) != 0 {
+	if dest.GetFloatAt(0, 0) != 226 && dest.GetFloatAt(0, 1) != 0.7853982 {
 		t.Errorf("Invalid HoughLines first test element: %v, %v", dest.GetFloatAt(0, 0), dest.GetFloatAt(0, 1))
 	}
 
-	if dest.GetFloatAt(1, 0) != 0.99483764 && dest.GetFloatAt(1, 1) != 0 {
+	if dest.GetFloatAt(1, 0) != 228 && dest.GetFloatAt(1, 1) != 0.7853982 {
 		t.Errorf("Invalid HoughLines second test element: %v, %v", dest.GetFloatAt(1, 0), dest.GetFloatAt(1, 1))
 	}
 
-	if dest.GetFloatAt(10409, 0) != -118.246056 && dest.GetFloatAt(10409, 1) != 2 {
-		t.Errorf("Invalid HoughLines penultimate test element: %v, %v", dest.GetFloatAt(10409, 0), dest.GetFloatAt(10409, 1))
+	if dest.GetFloatAt(6463, 0) != 23 && dest.GetFloatAt(6463, 1) != 0.75049156 {
+		t.Errorf("Invalid HoughLines penultimate test element: %v, %v", dest.GetFloatAt(6463, 0), dest.GetFloatAt(6463, 1))
 	}
 
-	if dest.GetFloatAt(10410, 0) != -118.246056 && dest.GetFloatAt(10410, 1) != 2 {
-		t.Errorf("Invalid HoughLines last test element: %v, %v", dest.GetFloatAt(10410, 0), dest.GetFloatAt(10410, 1))
+	if dest.GetFloatAt(6464, 0) != 23 && dest.GetFloatAt(6464, 1) != 0.82030475 {
+		t.Errorf("Invalid HoughLines last test element: %v, %v", dest.GetFloatAt(6464, 0), dest.GetFloatAt(6464, 1))
 	}
 }
 
@@ -856,18 +917,18 @@ func TestHoughLinesP(t *testing.T) {
 	dest := NewMat()
 	defer dest.Close()
 
-	HoughLinesP(img, &dest, math.Pi/180, 1, 1)
+	HoughLinesP(img, &dest, 1, math.Pi/180, 50)
 	if dest.Empty() {
 		t.Error("Empty HoughLinesP test")
 	}
-	if dest.Rows() != 435 {
+	if dest.Rows() != 4356 {
 		t.Errorf("Invalid HoughLinesP test rows: %v", dest.Rows())
 	}
 	if dest.Cols() != 1 {
 		t.Errorf("Invalid HoughLinesP test cols: %v", dest.Cols())
 	}
 
-	if dest.GetIntAt(0, 0) != 197 && dest.GetIntAt(0, 1) != 319 && dest.GetIntAt(0, 2) != 197 && dest.GetIntAt(0, 3) != 197 {
+	if dest.GetIntAt(0, 0) != 46 && dest.GetIntAt(0, 1) != 0 && dest.GetIntAt(0, 2) != 365 && dest.GetIntAt(0, 3) != 319 {
 		t.Errorf("Invalid HoughLinesP first test element: %v, %v, %v, %v", dest.GetIntAt(0, 0), dest.GetIntAt(0, 1), dest.GetIntAt(0, 2), dest.GetIntAt(0, 3))
 	}
 
@@ -879,7 +940,7 @@ func TestHoughLinesP(t *testing.T) {
 		t.Errorf("Invalid HoughLinesP penultimate test element: %v, %v, %v, %v", dest.GetIntAt(433, 0), dest.GetIntAt(433, 1), dest.GetIntAt(433, 2), dest.GetIntAt(433, 3))
 	}
 
-	if dest.GetIntAt(434, 0) != 43 && dest.GetIntAt(434, 1) != 316 && dest.GetIntAt(434, 2) != 43 && dest.GetIntAt(434, 3) != 316 {
+	if dest.GetIntAt(434, 0) != 39 && dest.GetIntAt(434, 1) != 280 && dest.GetIntAt(434, 2) != 89 && dest.GetIntAt(434, 3) != 227 {
 		t.Errorf("Invalid HoughLinesP last test element: %v, %v, %v, %v", dest.GetIntAt(434, 0), dest.GetIntAt(434, 1), dest.GetIntAt(434, 2), dest.GetIntAt(434, 3))
 	}
 }
@@ -894,18 +955,18 @@ func TestHoughLinesPWithParams(t *testing.T) {
 	dest := NewMat()
 	defer dest.Close()
 
-	HoughLinesPWithParams(img, &dest, math.Pi/180, 1, 1, 0, 0)
+	HoughLinesPWithParams(img, &dest, 1, math.Pi/180, 50, 1, 1)
 	if dest.Empty() {
 		t.Error("Empty HoughLinesPWithParams test")
 	}
-	if dest.Rows() != 435 {
+	if dest.Rows() != 514 {
 		t.Errorf("Invalid HoughLinesPWithParams test rows: %v", dest.Rows())
 	}
 	if dest.Cols() != 1 {
 		t.Errorf("Invalid HoughLinesPWithParams test cols: %v", dest.Cols())
 	}
 
-	if dest.GetIntAt(0, 0) != 197 && dest.GetIntAt(0, 1) != 319 && dest.GetIntAt(0, 2) != 197 && dest.GetIntAt(0, 3) != 197 {
+	if dest.GetIntAt(0, 0) != 46 && dest.GetIntAt(0, 1) != 0 && dest.GetIntAt(0, 2) != 365 && dest.GetIntAt(0, 3) != 319 {
 		t.Errorf("Invalid HoughLinesPWithParams first test element: %v, %v, %v, %v", dest.GetIntAt(0, 0), dest.GetIntAt(0, 1), dest.GetIntAt(0, 2), dest.GetIntAt(0, 3))
 	}
 
@@ -913,11 +974,11 @@ func TestHoughLinesPWithParams(t *testing.T) {
 		t.Errorf("Invalid HoughLinesPWithParams second test element: %v, %v, %v, %v", dest.GetIntAt(1, 0), dest.GetIntAt(1, 1), dest.GetIntAt(1, 2), dest.GetIntAt(1, 3))
 	}
 
-	if dest.GetIntAt(433, 0) != 357 && dest.GetIntAt(433, 1) != 316 && dest.GetIntAt(433, 2) != 357 && dest.GetIntAt(433, 3) != 316 {
+	if dest.GetIntAt(433, 0) != 0 && dest.GetIntAt(433, 1) != 126 && dest.GetIntAt(433, 2) != 71 && dest.GetIntAt(433, 3) != 57 {
 		t.Errorf("Invalid HoughLinesPWithParams penultimate test element: %v, %v, %v, %v", dest.GetIntAt(433, 0), dest.GetIntAt(433, 1), dest.GetIntAt(433, 2), dest.GetIntAt(433, 3))
 	}
 
-	if dest.GetIntAt(434, 0) != 43 && dest.GetIntAt(434, 1) != 316 && dest.GetIntAt(434, 2) != 43 && dest.GetIntAt(434, 3) != 316 {
+	if dest.GetIntAt(434, 0) != 309 && dest.GetIntAt(434, 1) != 280 && dest.GetIntAt(434, 2) != 89 && dest.GetIntAt(434, 3) != 227 {
 		t.Errorf("Invalid HoughLinesPWithParams last test element: %v, %v, %v, %v", dest.GetIntAt(434, 0), dest.GetIntAt(434, 1), dest.GetIntAt(434, 2), dest.GetIntAt(434, 3))
 	}
 }
@@ -1422,14 +1483,19 @@ func TestGetPerspectiveTransform(t *testing.T) {
 		image.Pt(10, 10),
 		image.Pt(5, 10),
 	}
+	pvsrc := NewPointVectorFromPoints(src)
+	defer pvsrc.Close()
+
 	dst := []image.Point{
 		image.Pt(0, 0),
 		image.Pt(10, 0),
 		image.Pt(10, 10),
 		image.Pt(0, 10),
 	}
+	pvdst := NewPointVectorFromPoints(dst)
+	defer pvdst.Close()
 
-	m := GetPerspectiveTransform(src, dst)
+	m := GetPerspectiveTransform(pvsrc, pvdst)
 	defer m.Close()
 
 	if m.Cols() != 3 {
@@ -1454,7 +1520,13 @@ func TestGetPerspectiveTransform2f(t *testing.T) {
 		{0, 10},
 	}
 
-	m := GetPerspectiveTransform2f(src, dst)
+	pvsrc := NewPoint2fVectorFromPoints(src)
+	defer pvsrc.Close()
+
+	pvdst := NewPoint2fVectorFromPoints(dst)
+	defer pvdst.Close()
+
+	m := GetPerspectiveTransform2f(pvsrc, pvdst)
 	defer m.Close()
 
 	if m.Cols() != 3 {
@@ -1471,13 +1543,18 @@ func TestGetAffineTransform(t *testing.T) {
 		image.Pt(10, 5),
 		image.Pt(10, 10),
 	}
+	pvsrc := NewPointVectorFromPoints(src)
+	defer pvsrc.Close()
+
 	dst := []image.Point{
 		image.Pt(0, 0),
 		image.Pt(10, 0),
 		image.Pt(10, 10),
 	}
+	pvdst := NewPointVectorFromPoints(dst)
+	defer pvdst.Close()
 
-	m := GetAffineTransform(src, dst)
+	m := GetAffineTransform(pvsrc, pvdst)
 	defer m.Close()
 
 	if m.Cols() != 3 {
@@ -1500,7 +1577,13 @@ func TestGetAffineTransform2f(t *testing.T) {
 		{100.12, 150.21},
 	}
 
-	m := GetAffineTransform2f(src, dst)
+	pvsrc := NewPoint2fVectorFromPoints(src)
+	defer pvsrc.Close()
+
+	pvdst := NewPoint2fVectorFromPoints(dst)
+	defer pvdst.Close()
+
+	m := GetAffineTransform2f(pvsrc, pvdst)
 	defer m.Close()
 
 	if m.Cols() != 3 {
@@ -1546,7 +1629,13 @@ func TestFindHomography(t *testing.T) {
 	m := FindHomography(src, &dst, HomograpyMethodAllPoints, 3, &mask, 2000, 0.995)
 	defer m.Close()
 
-	m2 := GetPerspectiveTransform2f(srcPoints, dstPoints)
+	pvsrc := NewPoint2fVectorFromPoints(srcPoints)
+	defer pvsrc.Close()
+
+	pvdst := NewPoint2fVectorFromPoints(dstPoints)
+	defer pvdst.Close()
+
+	m2 := GetPerspectiveTransform2f(pvsrc, pvdst)
 	defer m2.Close()
 
 	for row := 0; row < 3; row++ {
@@ -1571,13 +1660,19 @@ func TestWarpPerspective(t *testing.T) {
 		image.Pt(10, 10),
 		image.Pt(5, 10),
 	}
+	pvs := NewPointVectorFromPoints(s)
+	defer pvs.Close()
+
 	d := []image.Point{
 		image.Pt(0, 0),
 		image.Pt(10, 0),
 		image.Pt(10, 10),
 		image.Pt(0, 10),
 	}
-	m := GetPerspectiveTransform(s, d)
+	pvd := NewPointVectorFromPoints(d)
+	defer pvd.Close()
+
+	m := GetPerspectiveTransform(pvs, pvd)
 	defer m.Close()
 
 	dst := NewMat()
@@ -1603,6 +1698,7 @@ func TestDrawContours(t *testing.T) {
 	Rectangle(&img, image.Rect(125, 25, 175, 75), white, 1)
 
 	contours := FindContours(img, RetrievalExternal, ChainApproxSimple)
+	defer contours.Close()
 
 	if v := img.GetUCharAt(23, 123); v != 0 {
 		t.Errorf("TestDrawContours(): wrong pixel value = %v, want = %v", v, 0)
@@ -1647,7 +1743,11 @@ func TestFillPoly(t *testing.T) {
 			image.Pt(20, 10),
 		},
 	}
-	FillPoly(&img, pts, white)
+
+	pv := NewPointsVectorFromPoints(pts)
+	defer pv.Close()
+
+	FillPoly(&img, pv, white)
 
 	if v := img.GetUCharAt(10, 10); v != 255 {
 		t.Errorf("TestFillPoly(): wrong pixel value = %v, want = %v", v, 255)
@@ -1667,7 +1767,10 @@ func TestPolylines(t *testing.T) {
 			image.Pt(20, 10),
 		},
 	}
-	Polylines(&img, pts, true, white, 1)
+	pv := NewPointsVectorFromPoints(pts)
+	defer pv.Close()
+
+	Polylines(&img, pv, true, white, 1)
 
 	if v := img.GetUCharAt(10, 10); v != 255 {
 		t.Errorf("TestPolylines(): wrong pixel value = %v, want = %v", v, 255)
@@ -1760,11 +1863,13 @@ func TestLinearPolar(t *testing.T) {
 
 func TestFitLine(t *testing.T) {
 	points := []image.Point{image.Pt(125, 24), image.Pt(124, 75), image.Pt(175, 76), image.Pt(176, 25)}
+	pv := NewPointVectorFromPoints(points)
+	defer pv.Close()
 
 	line := NewMat()
 	defer line.Close()
 
-	FitLine(points, &line, DistL2, 0, 0.01, 0.01)
+	FitLine(pv, &line, DistL2, 0, 0.01, 0.01)
 
 	if ok := line.Empty(); ok {
 		t.Errorf("FitLine(): line is empty")
@@ -1926,6 +2031,118 @@ func TestMatToImage(t *testing.T) {
 	_, err = matWithUnsupportedType.ToImage()
 	if err == nil {
 		t.Error("TestToImage expected error got nil.")
+	}
+}
+
+func TestMatToImageYUV(t *testing.T) {
+	mat1 := NewMatWithSize(101, 102, MatTypeCV8UC3)
+	defer mat1.Close()
+
+	img, err := mat1.ToImageYUV()
+	if err != nil {
+		t.Errorf("TestToImage %v.", err)
+	}
+
+	if img.Bounds().Dx() != 102 {
+		t.Errorf("TestToImage incorrect width got %d.", img.Bounds().Dx())
+	}
+
+	if img.Bounds().Dy() != 101 {
+		t.Errorf("TestToImage incorrect height got %d.", img.Bounds().Dy())
+	}
+
+	matreg := mat1.Region(image.Rect(25, 25, 75, 75))
+	defer matreg.Close()
+	img, err = matreg.ToImageYUV()
+	if err != nil {
+		t.Errorf("Expected error.")
+	}
+
+	mat2 := NewMatWithSize(101, 102, MatTypeCV8UC1)
+	defer mat2.Close()
+
+	img, err = mat2.ToImageYUV()
+	if err != nil {
+		t.Errorf("TestToImageYUV %v.", err)
+	}
+
+	mat3 := NewMatWithSize(101, 102, MatTypeCV8UC4)
+	defer mat3.Close()
+
+	img, err = mat3.ToImageYUV()
+	if err != nil {
+		t.Errorf("TestToImageYUV %v.", err)
+	}
+
+	matreg3 := mat3.Region(image.Rect(25, 25, 75, 75))
+	defer matreg3.Close()
+	img, err = matreg3.ToImageYUV()
+	if err != nil {
+		t.Errorf("Expected error.")
+	}
+
+	matWithUnsupportedType := NewMatWithSize(101, 102, MatTypeCV8S)
+	defer matWithUnsupportedType.Close()
+
+	_, err = matWithUnsupportedType.ToImageYUV()
+	if err == nil {
+		t.Error("TestToImageYUV expected error got nil.")
+	}
+}
+
+func TestMatToImageYUVWithParams(t *testing.T) {
+	mat1 := NewMatWithSize(101, 102, MatTypeCV8UC3)
+	defer mat1.Close()
+
+	img, err := mat1.ToImageYUVWithParams(image.YCbCrSubsampleRatio420)
+	if err != nil {
+		t.Errorf("TestToImage %v.", err)
+	}
+
+	if img.Bounds().Dx() != 102 {
+		t.Errorf("TestToImage incorrect width got %d.", img.Bounds().Dx())
+	}
+
+	if img.Bounds().Dy() != 101 {
+		t.Errorf("TestToImage incorrect height got %d.", img.Bounds().Dy())
+	}
+
+	matreg := mat1.Region(image.Rect(25, 25, 75, 75))
+	defer matreg.Close()
+	img, err = matreg.ToImageYUVWithParams(image.YCbCrSubsampleRatio420)
+	if err != nil {
+		t.Errorf("Expected error.")
+	}
+
+	mat2 := NewMatWithSize(101, 102, MatTypeCV8UC1)
+	defer mat2.Close()
+
+	img, err = mat2.ToImageYUVWithParams(image.YCbCrSubsampleRatio420)
+	if err != nil {
+		t.Errorf("TestToImageYUVWithParams image.YCbCrSubsampleRatio420%v.", err)
+	}
+
+	mat3 := NewMatWithSize(101, 102, MatTypeCV8UC4)
+	defer mat3.Close()
+
+	img, err = mat3.ToImageYUVWithParams(image.YCbCrSubsampleRatio420)
+	if err != nil {
+		t.Errorf("TestToImageYUVWithParams image.YCbCrSubsampleRatio420%v.", err)
+	}
+
+	matreg3 := mat3.Region(image.Rect(25, 25, 75, 75))
+	defer matreg3.Close()
+	img, err = matreg3.ToImageYUVWithParams(image.YCbCrSubsampleRatio420)
+	if err != nil {
+		t.Errorf("Expected error.")
+	}
+
+	matWithUnsupportedType := NewMatWithSize(101, 102, MatTypeCV8S)
+	defer matWithUnsupportedType.Close()
+
+	_, err = matWithUnsupportedType.ToImageYUVWithParams(image.YCbCrSubsampleRatio420)
+	if err == nil {
+		t.Error("TestToImageYUVWithParams image.YCbCrSubsampleRatio420expected error got nil.")
 	}
 }
 

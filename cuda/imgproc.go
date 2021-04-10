@@ -22,9 +22,21 @@ type CannyEdgeDetector struct {
 	p unsafe.Pointer
 }
 
-// NewCascadeClassifier_GPU returns a new CascadeClassifier.
-func CreateCannyEdgeDetector(lowThresh, highThresh float64, appertureSize int, L2gradient bool) CannyEdgeDetector {
-	return CannyEdgeDetector{p: unsafe.Pointer(C.CreateCannyEdgeDetector(C.double(lowThresh), C.double(highThresh), C.int(appertureSize), C.bool(L2gradient)))}
+// NewCannyEdgeDetector returns a new CannyEdgeDetector.
+func NewCannyEdgeDetector(lowThresh, highThresh float64) CannyEdgeDetector {
+	return CannyEdgeDetector{p: unsafe.Pointer(C.CreateCannyEdgeDetector(C.double(lowThresh), C.double(highThresh)))}
+}
+
+// NewCannyEdgeDetectorWithParams returns a new CannyEdgeDetector.
+func NewCannyEdgeDetectorWithParams(lowThresh, highThresh float64, appertureSize int, L2gradient bool) CannyEdgeDetector {
+	return CannyEdgeDetector{p: unsafe.Pointer(C.CreateCannyEdgeDetectorWithParams(C.double(lowThresh), C.double(highThresh), C.int(appertureSize), C.bool(L2gradient)))}
+}
+
+// Close CannyEdgeDetector
+func (h *CannyEdgeDetector) Close() error {
+	C.CannyEdgeDetector_Close((C.CannyEdgeDetector)(h.p))
+	h.p = nil
+	return nil
 }
 
 // Detect finds edges in an image using the Canny algorithm.
@@ -119,11 +131,67 @@ func CvtColor(src GpuMat, dst *GpuMat, code gocv.ColorConversionCode) {
 	C.GpuCvtColor(src.p, dst.p, C.int(code))
 }
 
-// Threshold applies a fixed-level threshold to each array element.
+// HoughLinesDetector
 //
 // For further details, please see:
-// https://docs.opencv.org/master/d8/d34/group__cudaarithm__elem.html#ga40f1c94ae9a9456df3cad48e3cb008e1
+// https://docs.opencv.org/master/d2/dcd/classcv_1_1cuda_1_1HoughLinesDetector.html
 //
-func Threshold(src GpuMat, dst *GpuMat, thresh, maxval float64, typ int) {
-	C.GpuThreshold(src.p, dst.p, C.double(thresh), C.double(maxval), C.int(typ))
+type HoughLinesDetector struct {
+	p unsafe.Pointer
+}
+
+// NewHoughLinesDetector returns a new HoughLinesDetector.
+func NewHoughLinesDetector(rho float32, theta float32, threshold int) HoughLinesDetector {
+	return HoughLinesDetector{p: unsafe.Pointer(C.HoughLinesDetector_Create(C.double(rho), C.double(theta), C.int(threshold)))}
+}
+
+// NewHoughLinesDetectorWithParams returns a new HoughLinesDetector.
+func NewHoughLinesDetectorWithParams(rho float32, theta float32, threshold int, sort bool, maxlines int) HoughLinesDetector {
+	return HoughLinesDetector{p: unsafe.Pointer(C.HoughLinesDetector_CreateWithParams(C.double(rho), C.double(theta), C.int(threshold), C.bool(sort), C.int(maxlines)))}
+}
+
+// Close HoughLinesDetector
+func (h *HoughLinesDetector) Close() error {
+	C.HoughLinesDetector_Close((C.HoughLinesDetector)(h.p))
+	h.p = nil
+	return nil
+}
+
+// Detect finds lines in a binary image using the classical Hough transform
+//
+// For further details, please see:
+// https://docs.opencv.org/master/d2/dcd/classcv_1_1cuda_1_1HoughLinesDetector.html#a18ff6d0886833ac6215054e191ae2520
+//
+func (h *HoughLinesDetector) Detect(img GpuMat) GpuMat {
+	return newGpuMat(C.HoughLinesDetector_Detect(C.HoughLinesDetector(h.p), img.p))
+}
+
+// HoughSegmentDetector
+//
+// For further details, please see:
+// https://docs.opencv.org/master/d6/df9/classcv_1_1cuda_1_1HoughSegmentDetector.html
+//
+type HoughSegmentDetector struct {
+	p unsafe.Pointer
+}
+
+// NewHoughSegmentDetector returns a new HoughSegmentDetector.
+func NewHoughSegmentDetector(rho float32, theta float32, minLineLength int, maxLineGap int) HoughSegmentDetector {
+	return HoughSegmentDetector{p: unsafe.Pointer(C.HoughSegmentDetector_Create(C.double(rho), C.double(theta), C.int(minLineLength), C.int(maxLineGap)))}
+}
+
+// Close HoughSegmentDetector
+func (h *HoughSegmentDetector) Close() error {
+	C.HoughSegmentDetector_Close((C.HoughSegmentDetector)(h.p))
+	h.p = nil
+	return nil
+}
+
+// Detect finds lines in a binary image using the Hough probabilistic transform.
+//
+// For further details, please see:
+// https://docs.opencv.org/master/d6/df9/classcv_1_1cuda_1_1HoughSegmentDetector.html#a739bf84825ca455966d69dd75ca0ea6e
+//
+func (h *HoughSegmentDetector) Detect(img GpuMat) GpuMat {
+	return newGpuMat(C.HoughSegmentDetector_Detect(C.HoughSegmentDetector(h.p), img.p))
 }
