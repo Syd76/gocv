@@ -63,3 +63,29 @@ func TestTextureFlattening(t *testing.T) {
 		t.Error("Invlalid TextureFlattening test")
 	}
 }
+
+
+
+func TestMergeMertens(t *testing.T) {
+
+	var src [3]Mat
+	for i := 0; i<3 ; i++ {
+		src[i] = NewMatWithSize(20, 20, MatTypeCV8UC3)
+		defer src[i].Close()
+	}
+
+
+	dst := NewMat()
+	defer dst.Close()
+
+	mertens := NewMergeMertens()
+	defer mertens.Close()
+
+    // Convet [3]Mat to []Mat
+	mertens.Process( []Mat{src[0],src[1],src[2]} , &dst )
+
+	if dst.Empty() || dst.Rows() != src[0].Rows() || dst.Cols() != src[0].Cols() {
+		t.Error("Invlalid TestMergeMertens test")
+	}
+}
+
