@@ -1071,6 +1071,15 @@ func Compare(src1 Mat, src2 Mat, dst *Mat, ct CompareType) {
 	C.Mat_Compare(src1.p, src2.p, dst.p, C.int(ct))
 }
 
+// Compare performs the per-element comparison of an arrays Src1 and a scalar src2
+// or an array and scalar value.
+//
+// For further details, please see:
+// https://docs.opencv.org/master/d2/de8/group__core__array.html#ga303cfb72acf8cbb36d884650c09a3a97
+//
+func CompareWithScalar(src1 Mat, src2 int, dst *Mat, ct CompareType) {
+	C.Mat_CompareWithScalar(src1.p, C.int(src2), dst.p, C.int(ct))
+}
 // CountNonZero counts non-zero array elements.
 //
 // For further details, please see:

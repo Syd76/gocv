@@ -454,6 +454,10 @@ void Mat_Compare(Mat src1, Mat src2, Mat dst, int ct) {
     cv::compare(*src1, *src2, *dst, ct);
 }
 
+void Mat_CompareWithScalar(Mat src1, int src2, Mat dst, int ct) {
+    cv::compare(*src1, src2, *dst, ct);
+}
+
 int Mat_CountNonZero(Mat src) {
     return cv::countNonZero(*src);
 }

@@ -328,6 +328,8 @@ void Mat_BitwiseOrWithMask(Mat src1, Mat src2, Mat dst, Mat mask);
 void Mat_BitwiseXor(Mat src1, Mat src2, Mat dst);
 void Mat_BitwiseXorWithMask(Mat src1, Mat src2, Mat dst, Mat mask);
 void Mat_Compare(Mat src1, Mat src2, Mat dst, int ct);
+void Mat_CompareWithScalar(Mat src1, int src2, Mat dst, int ct) ;
+
 void Mat_BatchDistance(Mat src1, Mat src2, Mat dist, int dtype, Mat nidx, int normType, int K,
                        Mat mask, int update, bool crosscheck);
 int Mat_BorderInterpolate(int p, int len, int borderType);

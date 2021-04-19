@@ -268,6 +268,14 @@ func Dilate(src Mat, dst *Mat, kernel Mat) {
 	C.Dilate(src.p, dst.p, kernel.p)
 }
 
+
+func DilateWithParams(src Mat, dst *Mat, kernel Mat, anchor image.Point, iterations int, borderType BorderType) {
+		cAnchor := C.struct_Point{
+			x: C.int(anchor.X),
+			y: C.int(anchor.Y),
+		}
+		C.DilateWithParams(src.p, dst.p, kernel.p, cAnchor, C.int(iterations), C.int(borderType))
+}
 // DistanceTransformLabelTypes are the types of the DistanceTransform algorithm flag
 type DistanceTransformLabelTypes int
 
@@ -317,7 +325,7 @@ func Erode(src Mat, dst *Mat, kernel Mat) {
 // For further details, please see:
 // https://docs.opencv.org/master/d4/d86/group__imgproc__filter.html#gaeb1e0c1033e3f6b891a25d0511362aeb
 //
-func ErodeWithParams(src Mat, dst *Mat, kernel Mat, anchor image.Point, iterations, borderType int) {
+func ErodeWithParams(src Mat, dst *Mat, kernel Mat, anchor image.Point, iterations int, borderType BorderType) {
 	cAnchor := C.struct_Point{
 		x: C.int(anchor.X),
 		y: C.int(anchor.Y),
