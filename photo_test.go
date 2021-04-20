@@ -15,7 +15,7 @@ func TestColorChange(t *testing.T) {
 
 	ColorChange(src, mask, &dst, 1.5, .5, .5)
 	if dst.Empty() || dst.Rows() != src.Rows() || dst.Cols() != src.Cols() {
-		t.Error("Invlalid ColorChange test")
+		t.Error("Invalid ColorChange test")
 	}
 }
 
@@ -32,7 +32,7 @@ func TestSeamlessClone(t *testing.T) {
 	center := image.Point{dst.Cols() / 2, dst.Rows() / 2}
 	SeamlessClone(src, dst, mask, center, &blend, NormalClone)
 	if blend.Empty() || dst.Rows() != blend.Rows() || dst.Cols() != blend.Cols() {
-		t.Error("Invlalid SeamlessClone test")
+		t.Error("Invalid SeamlessClone test")
 	}
 }
 
@@ -46,7 +46,7 @@ func TestIlluminationChange(t *testing.T) {
 
 	IlluminationChange(src, mask, &dst, 0.2, 0.4)
 	if dst.Empty() || dst.Rows() != src.Rows() || dst.Cols() != src.Cols() {
-		t.Error("Invlalid IlluminationChange test")
+		t.Error("Invalid IlluminationChange test")
 	}
 }
 
@@ -60,7 +60,7 @@ func TestTextureFlattening(t *testing.T) {
 
 	TextureFlattening(src, mask, &dst, 30, 45, 3)
 	if dst.Empty() || dst.Rows() != src.Rows() || dst.Cols() != src.Cols() {
-		t.Error("Invlalid TextureFlattening test")
+		t.Error("Invalid TextureFlattening test")
 	}
 }
 
@@ -85,7 +85,7 @@ func TestMergeMertens(t *testing.T) {
 	mertens.Process( []Mat{src[0],src[1],src[2]} , &dst )
 
 	if dst.Empty() || dst.Rows() != src[0].Rows() || dst.Cols() != src[0].Cols() {
-		t.Error("Invlalid TestMergeMertens test")
+		t.Error("Invalid TestMergeMertens test")
 	}
 }
 
