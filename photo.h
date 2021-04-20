@@ -45,7 +45,7 @@ void MergeMertens_Close(MergeMertens b);
 
 AlignMTB AlignMTB_Create();
 AlignMTB AlignMTB_CreateWithParams(int max_bits, int exclude_range, bool cut);
-void AlignMTB_Process(AlignMTB b, struct Mats src, struct Mats dst);
+void AlignMTB_Process(AlignMTB b, struct Mats src, struct Mats *dst);
 void AlignMTB_Close(AlignMTB b);
 
 #ifdef __cplusplus

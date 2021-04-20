@@ -188,7 +188,7 @@ func (b *AlignMTB) Close() error {
 // For further details, please see:
 // https://docs.opencv.org/master/d7/db6/classcv_1_1AlignMTB.html#a37b3417d844f362d781f34155cbcb201
 //
-func (b *AlignMTB) Process(src []Mat, dst []Mat) {
+func (b *AlignMTB) Process(src []Mat, dst *[]Mat) {
 
 	cSrcArray := make([]C.Mat, len(src))
 	for i, r := range src {
@@ -199,20 +199,15 @@ func (b *AlignMTB) Process(src []Mat, dst []Mat) {
 		length: C.int(len(src)),
 	}
 
-	cDstArray := make([]C.Mat, len(dst))
-	for i, r := range dst {
-		cDstArray[i] = r.p
-	}
-	cDstMats := C.struct_Mats{
-		mats:   (*C.Mat)(&cDstArray[0]),
-		length: C.int(len(dst)),
-	}
+	cDstMats := C.struct_Mats{}
 
-	C.AlignMTB_Process((C.AlignMTB)(b.p), cSrcMats, cDstMats)
+	C.AlignMTB_Process((C.AlignMTB)(b.p), cSrcMats, &cDstMats )
 
         // Pass the matrices by reference from an OpenCV/C++ to a GoCV::Mat object
 	for i := C.int(0); i < cDstMats.length; i++ {
-		dst[i].p = C.Mats_get(cDstMats, i)
+		var tempdst Mat
+		tempdst.p = C.Mats_get(cDstMats, i)
+		*dst = append( *dst , tempdst )
 	}
 	return
 }

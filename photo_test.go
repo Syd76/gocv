@@ -89,3 +89,34 @@ func TestMergeMertens(t *testing.T) {
 	}
 }
 
+
+func TestNewAlignMTB(t *testing.T) {
+
+	var src [3]Mat
+	for i := 0; i<3 ; i++ {
+		src[i] = NewMatWithSize(20, 20, MatTypeCV8UC3)
+		defer src[i].Close()
+	}
+
+	alignwtb := NewAlignMTB()
+	defer alignwtb.Close()
+
+	// Convert src [3]Mat to []Mat
+	// dst is reference of result of AlignMTB::Process
+
+	var dst []Mat
+	alignwtb.Process( []Mat{src[0],src[1],src[2]} , &dst   )
+
+	sizedst := len(dst)
+	t.Logf(" Size Dst slice : %d " , sizedst)
+	if sizedst > 0 {
+		if dst[0].Empty() || dst[0].Rows() != src[0].Rows() || dst[0].Cols() != src[0].Cols() {
+			t.Error("Invalid TestNewAlignMTB test")
+		}
+	}
+	if sizedst <= 0 {
+		t.Error("Invalid TestNewAlignMTB test : empty result")
+	}
+
+}
+
