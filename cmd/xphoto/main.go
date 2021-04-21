@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"gocv.io/x/gocv"
-  "gocv.io/x/gocv/contrib"
+	"gocv.io/x/gocv/contrib"
 )
 
 // What it does:
@@ -53,7 +53,7 @@ func main() {
 	defer ouputWBImage.Close()
 
 	alignwtb := gocv.NewAlignMTBWithParams(3, 20, false)
-	alignwtb.Process(inputImages, inputImages)
+	alignwtb.Process(inputImages, &inputImages)
 	defer alignwtb.Close()
 
 	mertens := gocv.NewMergeMertens()
