@@ -87,7 +87,7 @@ func (b *GrayworldWB) BalanceWhite(src gocv.Mat, dst *gocv.Mat) {
 // ----------------------- LearningBasedWB -----------------------
 // ----------------------- ---------------------------------------
 
-func NewGLearningBasedWB( ) LearningBasedWB {
+func NewLearningBasedWB( ) LearningBasedWB {
 	return LearningBasedWB{p: unsafe.Pointer(C.LearningBasedWB_Create())}
 }
 
