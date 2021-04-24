@@ -1,5 +1,79 @@
 #include "xphoto.h"
 
+void Xphoto_ApplyChannelGains( Mat src, Mat dst , float gainB, float gainG, float gainR) {
+	cv::xphoto::applyChannelGains (*src, *dst, gainB, gainG, gainR);
+}
+
+void Xphoto_Bm3dDenoising_Step( Mat src, Mat dststep1, Mat dststep2 ) {
+	
+		cv::xphoto::bm3dDenoising (
+								*src, *dststep1, *dststep2, 
+								1, 4,
+								16, 2500,
+								400, 8,
+								1, 2.0f,
+								cv::NORM_L2, cv::xphoto::BM3D_STEPALL,
+								cv::xphoto::HAAR
+							);
+}
+
+ 
+void Xphoto_Bm3dDenoising_Step_WithParams( 
+							Mat src, Mat dststep1, Mat dststep2,
+							float h, int templateWindowSize,
+							int searchWindowSize, int blockMatchingStep1,
+							int blockMatchingStep2, int groupSize,
+							int slidingStep, float beta,
+							int normType, int step,
+							int transformType
+						 ) {
+	
+		cv::xphoto::bm3dDenoising (
+								*src, *dststep1, *dststep2, 
+								h, templateWindowSize,
+								searchWindowSize, blockMatchingStep1,
+								blockMatchingStep2, groupSize,
+								slidingStep, beta,
+								normType, step,
+								transformType
+							);
+}
+ 
+void Xphoto_Bm3dDenoising ( Mat src, Mat dst ) {
+	 
+	cv::xphoto::bm3dDenoising (*src, *dst,
+							1, 4,
+							16, 2500,
+							400, 8,
+							1, 2.0f,
+							cv::NORM_L2, cv::xphoto::BM3D_STEPALL,
+							cv::xphoto::HAAR
+						);
+
+}
+
+void Xphoto_Bm3dDenoising_WithParams (
+							Mat src, Mat dst , float h, int templateWindowSize,
+							int searchWindowSize, int blockMatchingStep1,
+							int blockMatchingStep2, int groupSize,
+							int slidingStep, float beta,
+							int normType, int step,
+							int transformType
+						  ) {
+	
+	cv::xphoto::bm3dDenoising (*src, *dst, h, templateWindowSize,
+							searchWindowSize, blockMatchingStep1,
+							blockMatchingStep2, groupSize,
+							slidingStep, beta,
+							normType, step,
+							transformType
+						);
+
+}
+
+
+
+
 // ----------------------- GrayworldWB -----------------------
 
 GrayworldWB GrayworldWB_Create() {

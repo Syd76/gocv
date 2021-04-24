@@ -6,6 +6,53 @@ import (
     "gocv.io/x/gocv"
 )
 
+
+func TestBm3dDenoisingStepWithParams(t *testing.T) {
+
+  src := gocv.NewMatWithSize(200,200,gocv.MatTypeCV8UC3)
+  defer src.Close()
+  dst1 := gocv.NewMat()
+  defer dst1.Close()
+  dst2 := gocv.NewMat()
+  defer dst2.Close()
+
+  Bm3dDenoisingStepWithParams(src, &dst1, &dst2 ,
+								float32(1.0), int(4),
+								int(16), int(2500),
+								int(400), int(8),
+								int(1), float32(2.0),
+								gocv.NormL2,
+								Bm3dAlgoStepAll,
+								Bm3dTypeHaar )
+  
+  
+  
+  if src.Empty() || dst1.Rows() != src.Rows() || dst1.Cols() != src.Cols() {
+		t.Error("Invlalid TestBm3dDenoisingStepWithParams test")
+	}
+}
+
+func TestBm3dDenoisingWithParams(t *testing.T) {
+
+  src := gocv.NewMatWithSize(200,200,gocv.MatTypeCV8UC3)
+  defer src.Close()
+  dst := gocv.NewMat()
+  defer dst.Close()
+
+  Bm3dDenoisingWithParams(src, &dst,
+								float32(1.0), int(4),
+								int(16), int(2500),
+								int(400), int(8),
+								int(1), float32(2.0),
+								gocv.NormL2,
+								Bm3dAlgoStepAll,
+								Bm3dTypeHaar )
+  
+  if src.Empty() || dst.Rows() != src.Rows() || dst.Cols() != src.Cols() || dst.Type() != src.Type() {
+		t.Error("Invlalid BalanceWhite test")
+	}
+}
+
 func TestSetSaturationThreshold(t *testing.T) {
 
   grayworldwb := NewGrayworldWB()

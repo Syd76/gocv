@@ -23,6 +23,98 @@ type LearningBasedWB struct {
 }
 
 
+// Bm3dSteps is the type for the various BM3D algorithm steps
+type Bm3dSteps int
+
+const (
+  Bm3dAlgoStepAll Bm3dSteps = 0
+  Bm3dAlgoSte1 Bm3dSteps = 1
+  Bm3dAlgoSte2 Bm3dSteps = 2
+)
+
+type TransformTypes int
+
+const (
+	Bm3dTypeHaar TransformTypes = 0 
+)
+
+// ----------------------- ---------------------------------------
+// ----------------------- Bm3dDenoising -----------------------
+// ----------------------- ---------------------------------------
+
+func ApplyChannelGains(src gocv.Mat, dst *gocv.Mat, gainB float32, gainG float32, gainR float32) {
+	C.Xphoto_ApplyChannelGains( C.Mat(src.Ptr()), C.Mat(dst.Ptr()), C.float(gainB), C.float(gainG), C.float(gainR))
+	return
+}
+
+func Bm3dDenoisingStep( src gocv.Mat, dststep1 *gocv.Mat, dststep2 *gocv.Mat ) {
+	C.Xphoto_Bm3dDenoising_Step( C.Mat(src.Ptr()), C.Mat(dststep1.Ptr()), C.Mat(dststep2.Ptr()) ) 
+	return
+}
+
+func Bm3dDenoisingStepWithParams( src gocv.Mat, dststep1 *gocv.Mat, dststep2 *gocv.Mat,
+							h float32, templateWindowSize int,
+							searchWindowSize int, blockMatchingStep1 int,
+							blockMatchingStep2 int, groupSize int,
+							slidingStep int, beta float32,
+							normType gocv.NormType, step Bm3dSteps,
+							transformType TransformTypes) {
+	C.Xphoto_Bm3dDenoising_Step_WithParams( C.Mat(src.Ptr()), C.Mat(dststep1.Ptr()), C.Mat(dststep2.Ptr()) ,
+							C.float(h), C.int(templateWindowSize),
+							C.int(searchWindowSize), C.int(blockMatchingStep1) ,
+							C.int(blockMatchingStep2) , C.int(groupSize) ,
+							C.int(slidingStep) , C.float(beta) ,
+							C.int(normType) , C.int(step) ,
+							C.int(transformType) ) 
+	return
+}
+
+// func Bm3dDenoising( src gocv.Mat, dststep1 *gocv.Mat, dststep2 *gocv.Mat 
+// 							h float32, templateWindowSize int,
+// 							searchWindowSize int,blockMatchingStep1 int,
+// 							blockMatchingStep2 int,groupSize int,
+// 							slidingStep int, beta float32,
+// 							normType, int step int,
+// 							transformType int ) {
+// 	
+// 	C.Xphoto_Bm3dDenoising( C.Mat(src.Ptr()), C.Mat(dststep1.Ptr()), C.Mat(dststep2.Ptr()) ,
+// 							C.float(h), C.int(templateWindowSize),
+// 							C.int(searchWindowSize) , C.int(blockMatchingStep1) ,
+// 							C.int(blockMatchingStep2) , C.int(groupSize) ,
+// 							C.int(slidingStep) , C.float(beta) ,
+// 							C.int(normType) , C.int(step) ,
+// 							C.int(transformType) 
+// 					)
+// 	return
+// }
+
+func Bm3dDenoising( src gocv.Mat, dst *gocv.Mat ) {
+	C.Xphoto_Bm3dDenoising (C.Mat(src.Ptr()), C.Mat(dst.Ptr()) )
+}
+
+
+func Bm3dDenoisingWithParams( src gocv.Mat, dst *gocv.Mat,
+							h float32, templateWindowSize int,
+							searchWindowSize int,blockMatchingStep1 int,
+							blockMatchingStep2 int,groupSize int,
+							slidingStep int, beta float32,
+							normType gocv.NormType, step Bm3dSteps,
+							transformType TransformTypes ) {
+
+	C.Xphoto_Bm3dDenoising_WithParams ( C.Mat(src.Ptr()), C.Mat(dst.Ptr()),
+							C.float(h), C.int(templateWindowSize),
+							C.int(searchWindowSize) , C.int(blockMatchingStep1) ,
+							C.int(blockMatchingStep2) , C.int(groupSize) ,
+							C.int(slidingStep) , C.float(beta) ,
+							C.int(normType) , C.int(step) ,
+							C.int(transformType) )
+	return
+}
+						 
+						 
+						 
+
+
 // ----------------------- ---------------------------------------
 // ----------------------- GrayworldWB -----------------------
 // ----------------------- ---------------------------------------

@@ -4,6 +4,7 @@
 #ifdef __cplusplus
 #include <opencv2/opencv.hpp>
 #include <opencv2/xphoto/white_balance.hpp>
+#include <opencv2/xphoto/bm3d_image_denoising.hpp>
 extern "C" {
 #endif
 
@@ -16,6 +17,36 @@ typedef cv::Ptr<cv::xphoto::LearningBasedWB>* LearningBasedWB;
 typedef void* GrayworldWB;
 typedef void* LearningBasedWB;
 #endif
+
+
+// ----------------------- bm3d_image_denoising -----------------------
+
+void Xphoto_ApplyChannelGains( Mat src, Mat dst , float gainB, float gainG, float gainR) ;
+
+void Xphoto_Bm3dDenoising_Step( Mat src, Mat dststep1, Mat dststep2 ) ;
+void Xphoto_Bm3dDenoising_Step_WithParams( 
+							Mat src, Mat dststep1, Mat dststep2,  
+							float h, int templateWindowSize,
+							int searchWindowSize, int blockMatchingStep1,
+							int blockMatchingStep2, int groupSize,
+							int slidingStep, float beta,
+							int normType, int step,
+							int transformType
+						 ) ;
+
+void Xphoto_Bm3dDenoising ( Mat src, Mat dst ) ;
+void Xphoto_Bm3dDenoising_WithParams (
+							Mat src, Mat dst , 
+							float h, int templateWindowSize,
+							int searchWindowSize, int blockMatchingStep1,
+							int blockMatchingStep2, int groupSize,
+							int slidingStep, float beta,
+							int normType, int step,
+							int transformType
+						  ) ;
+
+
+// ----------------------- GrayworldWB -----------------------
 
 GrayworldWB GrayworldWB_Create();
 void GrayworldWB_Close(GrayworldWB b);
