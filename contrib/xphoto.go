@@ -35,7 +35,7 @@ const (
 type TransformTypes int
 
 const (
-	Bm3dTypeHaar TransformTypes = 0 
+	Bm3dTypeHaar TransformTypes = 0
 )
 
 // ----------------------- ---------------------------------------
@@ -47,11 +47,13 @@ func ApplyChannelGains(src gocv.Mat, dst *gocv.Mat, gainB float32, gainG float32
 	return
 }
 
+// src = Input 8-bit or 16-bit 1-channel image.
 func Bm3dDenoisingStep( src gocv.Mat, dststep1 *gocv.Mat, dststep2 *gocv.Mat ) {
-	C.Xphoto_Bm3dDenoising_Step( C.Mat(src.Ptr()), C.Mat(dststep1.Ptr()), C.Mat(dststep2.Ptr()) ) 
+	C.Xphoto_Bm3dDenoising_Step( C.Mat(src.Ptr()), C.Mat(dststep1.Ptr()), C.Mat(dststep2.Ptr()) )
 	return
 }
 
+// src = Input 8-bit or 16-bit 1-channel image.
 func Bm3dDenoisingStepWithParams( src gocv.Mat, dststep1 *gocv.Mat, dststep2 *gocv.Mat,
 							h float32, templateWindowSize int,
 							searchWindowSize int, blockMatchingStep1 int,
@@ -65,34 +67,16 @@ func Bm3dDenoisingStepWithParams( src gocv.Mat, dststep1 *gocv.Mat, dststep2 *go
 							C.int(blockMatchingStep2) , C.int(groupSize) ,
 							C.int(slidingStep) , C.float(beta) ,
 							C.int(normType) , C.int(step) ,
-							C.int(transformType) ) 
+							C.int(transformType) )
 	return
 }
 
-// func Bm3dDenoising( src gocv.Mat, dststep1 *gocv.Mat, dststep2 *gocv.Mat 
-// 							h float32, templateWindowSize int,
-// 							searchWindowSize int,blockMatchingStep1 int,
-// 							blockMatchingStep2 int,groupSize int,
-// 							slidingStep int, beta float32,
-// 							normType, int step int,
-// 							transformType int ) {
-// 	
-// 	C.Xphoto_Bm3dDenoising( C.Mat(src.Ptr()), C.Mat(dststep1.Ptr()), C.Mat(dststep2.Ptr()) ,
-// 							C.float(h), C.int(templateWindowSize),
-// 							C.int(searchWindowSize) , C.int(blockMatchingStep1) ,
-// 							C.int(blockMatchingStep2) , C.int(groupSize) ,
-// 							C.int(slidingStep) , C.float(beta) ,
-// 							C.int(normType) , C.int(step) ,
-// 							C.int(transformType) 
-// 					)
-// 	return
-// }
-
+// src = Input 8-bit or 16-bit 1-channel image.
 func Bm3dDenoising( src gocv.Mat, dst *gocv.Mat ) {
 	C.Xphoto_Bm3dDenoising (C.Mat(src.Ptr()), C.Mat(dst.Ptr()) )
 }
 
-
+// src = Input 8-bit or 16-bit 1-channel image.
 func Bm3dDenoisingWithParams( src gocv.Mat, dst *gocv.Mat,
 							h float32, templateWindowSize int,
 							searchWindowSize int,blockMatchingStep1 int,
@@ -110,15 +94,11 @@ func Bm3dDenoisingWithParams( src gocv.Mat, dst *gocv.Mat,
 							C.int(transformType) )
 	return
 }
-						 
-						 
-						 
 
 
 // ----------------------- ---------------------------------------
 // ----------------------- GrayworldWB -----------------------
 // ----------------------- ---------------------------------------
-
 
 // NewGrayworldWBWithParams returns a new Gray-world white balance algorithm.
 // of type GrayworldWB with customized parameters. GrayworldWB algorithm scales the values
@@ -184,10 +164,8 @@ func NewLearningBasedWB( ) LearningBasedWB {
 }
 
 func NewLearningBasedWBWithParams(pathmodel string ) LearningBasedWB {
-	
 	cpath := C.CString(pathmodel)
 	defer C.free(unsafe.Pointer(cpath))
-	
 	return LearningBasedWB{p: unsafe.Pointer(C.LearningBasedWB_CreateWithParams(cpath))}
 }
 
@@ -213,19 +191,19 @@ func (b *LearningBasedWB) GetHistBinNum() int {
 func (b *LearningBasedWB) GetRangeMaxVal() int {
 	return int(C.LearningBasedWB_GetRangeMaxVal((C.LearningBasedWB)(b.p)))
 }
- 
+
 func (b *LearningBasedWB) GetSaturationThreshold() float32 {
 	return float32(C.LearningBasedWB_GetSaturationThreshold((C.LearningBasedWB)(b.p)))
 }
 
 func (b *LearningBasedWB) SetHistBinNum( val int ) {
 	C.LearningBasedWB_SetHistBinNum((C.LearningBasedWB)(b.p), C.int(val))
-	return 
+	return
 }
 
 func (b *LearningBasedWB) SetRangeMaxVal( val int ) {
 	C.LearningBasedWB_SetRangeMaxVal((C.LearningBasedWB)(b.p), C.int(val))
-	return 
+	return
 }
 
 func (b *LearningBasedWB) SetSaturationThreshold( val float32 ) {

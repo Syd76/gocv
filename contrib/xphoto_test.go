@@ -8,8 +8,8 @@ import (
 
 
 func TestBm3dDenoisingStepWithParams(t *testing.T) {
-
-  src := gocv.NewMatWithSize(200,200,gocv.MatTypeCV8UC3)
+// src = Input 8-bit or 16-bit 1-channel image.
+  src := gocv.NewMatWithSize(200,200,gocv.MatTypeCV8UC1)
   defer src.Close()
   dst1 := gocv.NewMat()
   defer dst1.Close()
@@ -24,9 +24,9 @@ func TestBm3dDenoisingStepWithParams(t *testing.T) {
 								gocv.NormL2,
 								Bm3dAlgoStepAll,
 								Bm3dTypeHaar )
-  
-  
-  
+
+
+
   if src.Empty() || dst1.Rows() != src.Rows() || dst1.Cols() != src.Cols() {
 		t.Error("Invlalid TestBm3dDenoisingStepWithParams test")
 	}
@@ -34,7 +34,7 @@ func TestBm3dDenoisingStepWithParams(t *testing.T) {
 
 func TestBm3dDenoisingWithParams(t *testing.T) {
 
-  src := gocv.NewMatWithSize(200,200,gocv.MatTypeCV8UC3)
+  src := gocv.NewMatWithSize(200,200,gocv.MatTypeCV8UC1)
   defer src.Close()
   dst := gocv.NewMat()
   defer dst.Close()
@@ -81,7 +81,7 @@ func TestBalanceWhite(t *testing.T) {
 
 
 func TestNewLearningBasedWB(t *testing.T) {
-	
+
   learningbasedwb := NewLearningBasedWB()
   defer learningbasedwb.Close()
 
@@ -89,15 +89,15 @@ func TestNewLearningBasedWB(t *testing.T) {
   learningbasedwb.SetHistBinNum(valueset)
   learningbasedwb.SetRangeMaxVal(valueset)
   learningbasedwb.SetSaturationThreshold(float32(valueset))
-	
+
   valuehistbinNum := learningbasedwb.GetHistBinNum()
   valuerangemaxval := learningbasedwb.GetRangeMaxVal()
   valuesaturation := learningbasedwb.GetSaturationThreshold()
-  
+
   if valueset != valuehistbinNum {
 		t.Error("Invalid TestNewLearningBasedWB : GetHistBinNum test")
   }
-  
+
   if valueset != valuerangemaxval {
 		t.Error("Invalid TestNewLearningBasedWB : GetRangeMaxVal test")
   }
@@ -106,6 +106,3 @@ func TestNewLearningBasedWB(t *testing.T) {
 		t.Error("Invalid TestNewLearningBasedWB : GetSaturationThreshold test")
   }
 }
-	
-	
-	
