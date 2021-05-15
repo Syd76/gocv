@@ -49,6 +49,14 @@ const (
 	Bm3dTypeHaar TransformTypes = 0
 )
 
+type InpaintTypes int
+
+const (
+	ShitMap InpaintTypes = 0
+	FsrBest InpaintTypes = 1
+	FsrFast InpaintTypes = 2
+)
+
 // ----------------------- ---------------------------------------
 // ----------------------- Bm3dDenoising -------------------------
 // ----------------------- ---------------------------------------
@@ -425,7 +433,7 @@ func (b *SimpleWB) BalanceWhite(src gocv.Mat, dst *gocv.Mat) {
 }
 
 // ----------------------- ---------------------------------------
-// ----------------------- TonemapDurand ------------------------------
+// ----------------------- TonemapDurand -------------------------
 // ----------------------- ---------------------------------------
 
 // NewTonemapDurand returns more sophisticated learning-based
@@ -566,4 +574,37 @@ func (b *TonemapDurand) SetGamma(val float32) {
 func (b *TonemapDurand) Process(src gocv.Mat, dst *gocv.Mat) {
 	C.TonemapDurand_Process((C.TonemapDurand)(b.p), C.Mat(src.Ptr()), C.Mat(dst.Ptr()))
 	return
+}
+
+// ----------------------- ---------------------------------------
+// -------------------------- Inpaint ----------------------------
+// ----------------------- ---------------------------------------
+
+// The function implements different single-image inpainting algorithms.
+//
+// For further details, please see:
+// https://docs.opencv.org/master/de/daa/group__xphoto.html#gab4febba6be53e5fddc480b8cedf51eee
+//
+func Inpaint(src gocv.Mat, mask gocv.Mat, dst *gocv.Mat, algorithmType InpaintTypes) {
+	C.Inpaint(C.Mat(src.Ptr()), C.Mat(mask.Ptr()), C.Mat(dst.Ptr()), C.int(algorithmType))
+}
+
+// oilPainting, See the book for details :
+// GerPublished by ard J. Holzmann. Beyond Photography: The Digital Darkroom. Prentice Hall in 1988.
+//
+// For further details, please see:
+// https://docs.opencv.org/master/de/daa/group__xphoto.html#gac050a6e876298cb9713cd2c09db9a027
+//
+func OilPaintingWithParams(src gocv.Mat, dst gocv.Mat, size int, dynRatio int, code gocv.ColorConversionCode) {
+	C.OilPaintingWithParams(C.Mat(src.Ptr()), C.Mat(dst.Ptr()), C.int(size), C.int(dynRatio), C.int(code))
+}
+
+// oilPainting, See the book for details :
+// GerPublished by ard J. Holzmann. Beyond Photography: The Digital Darkroom. Prentice Hall in 1988.
+//
+// For further details, please see:
+// https://docs.opencv.org/master/de/daa/group__xphoto.html#gac18ef93a7b1e65f703f7dc3b1e8e5235
+//
+func OilPainting(src gocv.Mat, dst *gocv.Mat, size int, dynRatio int) {
+	C.OilPainting(C.Mat(src.Ptr()), C.Mat(dst.Ptr()), C.int(size), C.int(dynRatio))
 }

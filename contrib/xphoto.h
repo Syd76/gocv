@@ -6,6 +6,8 @@
 #include <opencv2/xphoto/bm3d_image_denoising.hpp>
 #include <opencv2/xphoto/white_balance.hpp>
 #include <opencv2/xphoto/tonemap.hpp>
+#include <opencv2/xphoto/inpainting.hpp>
+#include <opencv2/xphoto/oilpainting.hpp>
 extern "C" {
 #endif
 
@@ -110,6 +112,12 @@ float TonemapDurand_GetGamma(TonemapDurand b);
 void TonemapDurand_Process(TonemapDurand b, Mat src, Mat dst);
 void TonemapDurand_SetGamma(TonemapDurand b, float gamma);
 
+
+// ------------------------ Inpaint -----------------------
+
+void Inpaint(Mat src, Mat mask, Mat dst, int algorithmType);
+void OilPaintingWithParams(Mat src, Mat dst, int size, int dynRatio, int code);
+void OilPainting(Mat src, Mat dst, int size, int dynRatio);
 
 #ifdef __cplusplus
 }

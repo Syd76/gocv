@@ -165,3 +165,32 @@ func TestTonemapDurandProcess(t *testing.T) {
 		t.Error("Invlalid TestTonemapDurandProcess test")
 	}
 }
+
+func TestOilPainting(t *testing.T) {
+
+	jpgImageOilPainting := gocv.IMRead("../images/space_shuttle.jpg", gocv.IMReadColor)
+	if jpgImageOilPainting.Empty() {
+		t.Error("Invalid read of Source Mat in TestInpaint test")
+	}
+	defer jpgImageOilPainting.Close()
+
+	t.Logf("Read of Source Mat in TestOilPainting test : %d x %d", jpgImageOilPainting.Cols(), jpgImageOilPainting.Rows())
+
+	srcOilPainting := gocv.NewMat()
+	defer srcOilPainting.Close()
+	jpgImageOilPainting.ConvertTo(&srcOilPainting, gocv.MatTypeCV8UC3)
+
+	dstOilPainting := gocv.NewMat()
+	defer dstOilPainting.Close()
+
+	OilPainting(srcOilPainting, &dstOilPainting, 2, 2)
+
+	t.Logf("OilPainting : MAT %d <> %d : %d", dstOilPainting.Rows(), srcOilPainting.Rows(), dstOilPainting.Type())
+
+	if srcOilPainting.Empty() || dstOilPainting.Rows() != srcOilPainting.Rows() || dstOilPainting.Cols() != srcOilPainting.Cols() {
+		t.Error("Invlalid TestInpaint OilPainting test")
+		return
+	}
+
+	gocv.IMWrite("testOilPainting.png", dstOilPainting)
+}

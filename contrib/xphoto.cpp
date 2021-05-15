@@ -264,3 +264,17 @@ void TonemapDurand_SetGamma(TonemapDurand b, float gamma) {
 void TonemapDurand_Process(TonemapDurand b, Mat src, Mat dst) {
     (*b)->process(*src, *dst);
 }
+
+// -------------------- cv::xphoto::Inpaint --------------------
+
+void Inpaint(Mat src, Mat mask, Mat dst, int algorithmType) {
+    cv::xphoto::inpaint(*src, *mask, *dst, algorithmType);
+}
+
+void OilPaintingWithParams(Mat src, Mat dst, int size, int dynRatio, int code) {
+    cv::xphoto::oilPainting(*src, *dst, size, dynRatio, code);
+}
+
+void OilPainting(Mat src, Mat dst, int size, int dynRatio) {
+    cv::xphoto::oilPainting(*src, *dst, size, dynRatio);
+}
